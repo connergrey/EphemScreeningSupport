@@ -60,6 +60,7 @@ public class VCMGenerator {
             //                                                                       ////
             // NEED TO CONVERT FROM TEME TO EMEJ2K, JUST DOING THIS RN CAUSE IM LAZY ////
             //                                                                       ////
+
             vcm.write("<> J2K POS " + ecipos.substring(8,ecipos.length()) + "\n");//j2k pos
             vcm.write("<> J2K VEL " + ecivel.substring(8,ecivel.length()) + "\n");//j2k vel
             vcm.write("<> " + ecipos + "\n");

@@ -1,4 +1,8 @@
 import org.hipparchus.geometry.euclidean.threed.Vector3D;
+import org.orekit.frames.Frame;
+import org.orekit.frames.FramesFactory;
+import org.orekit.utils.Constants;
+import org.orekit.utils.TimeStampedPVCoordinates;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -9,6 +13,7 @@ import java.util.Scanner;
 public class OrbitBucketer {
 
     private String path;
+    private final Frame eme2000 = FramesFactory.getEME2000();
 
 
     public OrbitBucketer(String path){
@@ -16,16 +21,16 @@ public class OrbitBucketer {
 
     }
 
-    void createGroups() throws FileNotFoundException {
-
-        // define group separation altitudes
-        double alt1 = 500;
-        double alt2 = 1000;
+    void createGroups(double[] altitudes) throws FileNotFoundException {
 
         PrintWriter output = new PrintWriter(new File("output.csv"));
-        PrintWriter group1 = new PrintWriter(new File("group1.txt"));
-        PrintWriter group2 = new PrintWriter(new File("group2.txt"));
-        PrintWriter group3 = new PrintWriter(new File("group3.txt"));
+        // need N (length(alt) + 1) groups
+        int N = altitudes.length + 1;
+
+        List<PrintWriter> groups = new ArrayList<>();
+        for(int i = 0; i < N; i++){
+            groups.add(new PrintWriter(new File("group" + i + ".txt")));
+        }
 
         //write header line
         output.write("SatNo,alt_p,alt_a,Beg Group,End Group\n");
@@ -40,42 +45,16 @@ public class OrbitBucketer {
 
             for (File file : filePath.listFiles()) {
 
-                Scanner scan = new Scanner(file);
+                SPVecReader spReader = new SPVecReader();
+                spReader.readSPVec(file);
+                int satNo = spReader.getSatNo();
+                TimeStampedPVCoordinates tspvEME = spReader.getInitialState(eme2000);
+                Vector3D pos = tspvEME.getPosition(); // in m
+                Vector3D vel = tspvEME.getVelocity(); //in m/s
 
-                // GET SAT NO
-                scan.next();
-                scan.next();
-                int satNo = scan.nextInt();
-
-                // GET DATE
-                scan.nextLine();
-                scan.next();
-                scan.next();
-                scan.next();
-                int year = scan.nextInt();
-                int dayOfYear = scan.nextInt();
-
-                scan.next();
-                scan.next();
-                String time = scan.next();
-
-                scan.nextLine();
-                scan.next();
-                scan.next();
-                scan.next();
-                Vector3D pos = new Vector3D(scan.nextDouble(), scan.nextDouble(), scan.nextDouble()); //KM
-
-                scan.nextLine();
-                scan.next();
-                scan.next();
-                scan.next();
-                Vector3D vel = new Vector3D(scan.nextDouble(), scan.nextDouble(), scan.nextDouble()); //KM/S
-
-                //
-                // ADD CONVERSION FROM TEME TO EMEJ2000 (IM SKIPPING CAUSE IM LAZY AND IT REQUIRES I READ THE TIME)
-                //
-
-                double mu = 398600;
+                // calculate some orbital elements to find the min and max altitude of the orbit
+                double mu = Constants.EGM96_EARTH_MU; //in m^3/s^2 (i think)
+                double eRad = Constants.EGM96_EARTH_EQUATORIAL_RADIUS;
                 double r = pos.getNorm();
                 double v = vel.getNorm();
 
@@ -86,29 +65,66 @@ public class OrbitBucketer {
                 Vector3D eVec = (vel.crossProduct(hVec).scalarMultiply(1 / mu)).subtract(pos.normalize());
                 double e = eVec.getNorm();
 
-                double altp = a * (1 - e) - 6378;
-                double alta = a * (1 + e) - 6378;
+                double altp = (a * (1 - e) - eRad) / 1000;
+                double alta = (a * (1 + e) - eRad) / 1000;
+
+                if(a < 0 && e > 1){// its hyperbolic
+                    alta = 100e6; //some arbitrarily large number
+                }
 
                 // determine which groups this sat is in
                 int groupNoBeg = 0;
                 int groupNoEnd = 0;
 
-                if (altp >= 0 && altp < alt1) {
-                    groupNoBeg = 1;
-                } else if (altp >= alt1 && altp < alt2) {
-                    groupNoBeg = 2;
-                } else if (altp >= alt2) {
-                    groupNoBeg = 3;
+                //determine groups
+
+                //this:
+                for (int i = 0; i < N; i++) {
+                    if (i == 0){
+                        //check 0 to altitudes[0]
+                        if (altp >= 0 && altp < altitudes[i]){
+                            groupNoBeg = 0;
+                        }
+                    }else if (i == (N-1)){
+                        //check > altitudes[N-1]
+                        if(altp > altitudes[i-1]){
+                            groupNoBeg = i;
+                            groupNoBeg = groupNoBeg - 1; // buffer (wrote like this for clarity)
+                        }
+                    }else {
+                        //all the middle ones (i = 1 to N-2)
+                        if (altp >= altitudes[i - 1] && altp < altitudes[i]){
+                            groupNoBeg = i;
+                            groupNoBeg = groupNoBeg - 1; // buffer (wrote like this for clarity)
+                        }
+
+                    }
+
                 }
 
-                if (alta >= 0 && alta < alt1) {
-                    groupNoEnd = 1;
-                } else if (alta >= alt1 && alta < alt2) {
-                    groupNoEnd = 2;
-                } else if (alta >= alt2) {
-                    groupNoEnd = 3;
-                }
 
+                for (int i = 0; i < N; i++) {
+                    if (i == 0){
+                        //check 0 to altitudes[0]
+                        if (alta >= 0 && alta < altitudes[i]){
+                            groupNoEnd = 0;
+                            groupNoEnd = groupNoEnd + 1; // buffer (wrote like this for clarity)
+                        }
+                    }else if (i == (N-1)){
+                        //check > altitudes[N-2]
+                        if(alta > altitudes[i-1]){
+                            groupNoEnd = i;
+                        }
+                    }else {
+                        //all the middle ones (i = 1 to N-2)
+                        if (alta >= altitudes[i - 1] && alta < altitudes[i]){
+                            groupNoEnd = i;
+                            groupNoEnd = groupNoEnd + 1; // buffer (wrote like this for clarity)
+                        }
+
+                    }
+
+                }
 
                 //create line to write in csv
                 StringBuffer buffer = new StringBuffer("");
@@ -128,30 +144,23 @@ public class OrbitBucketer {
                 buffer.delete(0, buffer.length());
 
                 //write in group
-                if (groupNoBeg <= 1 && 1 <= groupNoEnd) {
-                    group1.write(String.valueOf(satNo) + "\n");
-                }
-                if (groupNoBeg <= 2 && 2 <= groupNoEnd) {
-                    group2.write(String.valueOf(satNo) + "\n");
-                }
-                if (groupNoBeg <= 3 && 3 <= groupNoEnd) {
-                    group3.write(String.valueOf(satNo) + "\n");
+                for(int i = groupNoBeg; i <= groupNoEnd; i++){
+                    groups.get(i).write(String.valueOf(satNo) + "\n");
                 }
 
             }
         }
         //close csv
         output.close();
-        group1.close();
-        group2.close();
-        group3.close();
+        for(int i = 0; i < N; i++){
+            groups.get(i).close();
+        }
 
     }
 
     void screenGroup(int screenSatNo) throws FileNotFoundException {
 
         PrintWriter group = new PrintWriter(new File("group.txt"));
-
 
         //determine which groups screenSatNo is in
         Scanner readOut = new Scanner(new File("output.csv"));
@@ -169,57 +178,22 @@ public class OrbitBucketer {
                 break;
             }
         }
-        if (outputBeg == 0 || outputEnd == 0) {
-            System.out.println("Error: Screen Sat No not found");
-        }
 
         //pull all unique satNos and write to group.txt
         List<Integer> included = new ArrayList<>();
-
-        if (outputBeg <= 1 && 1 <= outputEnd) {
-            Scanner g = new Scanner(new File("group1.txt"));
-
+        for (int i = outputBeg; i <= outputEnd; i++){
+            Scanner g = new Scanner(new File("group" + i + ".txt"));
             while (g.hasNext()) {
                 Integer satNo = g.nextInt();
-
                 if (!included.contains(satNo)) {
                     included.add(satNo);
                     group.write(String.valueOf(satNo) + "\n");
                 }
-
-            }
-            g.close();
-        }
-        if (outputBeg <= 2 && 2 <= outputEnd) {
-            Scanner g = new Scanner(new File("group2.txt"));
-
-            while (g.hasNext()) {
-                Integer satNo = g.nextInt();
-
-                if (!included.contains(satNo)) {
-                    included.add(satNo);
-                    group.write(String.valueOf(satNo) + "\n");
-                }
-
-            }
-            g.close();
-        }
-        if (outputBeg <= 3 && 3 <= outputEnd) {
-            Scanner g = new Scanner(new File("group3.txt"));
-
-            while (g.hasNext()) {
-                Integer satNo = g.nextInt();
-
-                if (!included.contains(satNo)) {
-                    included.add(satNo);
-                    group.write(String.valueOf(satNo) + "\n");
-                }
-
             }
             g.close();
         }
 
-        System.out.println("Group created that contains groups " + outputBeg + " to " + outputEnd);
+        //System.out.println("Group created that contains groups " + outputBeg + " to " + outputEnd);
         group.close();
 
     }
