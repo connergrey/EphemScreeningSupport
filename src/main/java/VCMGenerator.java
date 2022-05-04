@@ -166,15 +166,15 @@ public class VCMGenerator {
             vcm.write("<> " + spvec.nextLine() + "\n");//step size
 
             // THIS IS NOT REAL DATA YET
-            vcm.write("<> VECTOR U,V,W SIGMAS (KM):           0.1049     0.1238     0.0216\n");
+            vcm.write("<> VECTOR U,V,W SIGMAS (KM):           0.0000     0.0000     0.0000\n");
             vcm.write("<> VECTOR UD,VD,WD SIGMAS (KM/S):      0.0000     0.0000     0.0000\n");
             vcm.write("<> COVARIANCE MATRIX (EQUINOCTIAL ELS): ( 9x 9) WTD RMS:  1.00000E+00\n");
 
-            vcm.write("<>  1.48882E-11 -1.37549E-11  2.68345E-11 -3.74201E-11  5.98460E-11\n");
-            vcm.write("<>  1.46817E-10  1.41432E-14  6.31584E-14  7.26607E-13  1.30469E-13\n");
-            vcm.write("<> -6.88136E-13  6.27056E-13  1.67902E-12 -3.38392E-15  2.23359E-13\n");
-            vcm.write("<> -6.09893E-13  1.20022E-12  2.67220E-12  1.52213E-15  2.17965E-13\n");
-            vcm.write("<>  3.65867E-13  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
+            vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
+            vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
+            vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
+            vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
+            vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
             vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
             vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
             vcm.write("<>  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00  0.00000E+00\n");
@@ -214,6 +214,8 @@ public class VCMGenerator {
     }
 
     void findDroppedVCMs(double days) throws FileNotFoundException {
+
+        // only turn this on if you actually filter out VCMs in the 1st method
 
         //TimeScale utc = TimeScalesFactory.getUTC();
 
