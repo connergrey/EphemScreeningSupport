@@ -8,6 +8,9 @@ public class CalculateRTN {
 
     public static void main(String[] arg){
 
+        // the satNo that the ephemeris screening is being done for
+        int screenSatNo = 47479;
+
         File file = new File("kratos_pc.csv");
 
         String[] parts = new String[0];
@@ -28,18 +31,39 @@ public class CalculateRTN {
 
         Vector3D priPos = new Vector3D( Double.parseDouble(parts[10]) , Double.parseDouble(parts[11]), Double.parseDouble(parts[12]) ); //meters
         Vector3D secPos = new Vector3D( Double.parseDouble(parts[13]) , Double.parseDouble(parts[14]), Double.parseDouble(parts[15]) ); //meters
-        Vector3D rRel = secPos.subtract(priPos);
 
         Vector3D priVel = new Vector3D( Double.parseDouble(parts[16]) , Double.parseDouble(parts[17]), Double.parseDouble(parts[18]) ); // m/s
         Vector3D secVel = new Vector3D( Double.parseDouble(parts[19]) , Double.parseDouble(parts[20]), Double.parseDouble(parts[21]) ); // m/s
-        Vector3D vRel = secVel.subtract(priVel);
 
-        // define primary RIC frame (same as RTN)
-        Vector3D rHat = priPos.normalize();
+        // define frame according to the sat we are screening
+        int priSatNo = Integer.parseInt(parts[0]);
+        int secSatNo = Integer.parseInt(parts[1]);
 
-        Vector3D hVec = priPos.crossProduct(priVel);
+        Vector3D screenPos = new Vector3D(0,0,0);
+        Vector3D screenVel = new Vector3D(0,0,0);
+        Vector3D otherPos = new Vector3D(0,0,0);
+        Vector3D otherVel = new Vector3D(0,0,0);
+        // determine if sat we are screening is primary or secondary
+        if(priSatNo == screenSatNo) {
+            screenPos = priPos;
+            screenVel = priVel;
+            otherPos = secPos;
+            otherVel = secVel;
+        }else if(secSatNo == screenSatNo){
+            screenPos = secPos;
+            screenVel = secVel;
+            otherPos = priPos;
+            otherVel = priVel;
+        }
+
+        // find relative vector from screen sat to the other sat
+        Vector3D rRel = otherPos.subtract(screenPos);
+        Vector3D vRel = otherVel.subtract(screenVel);
+
+        // define screen's RIC frame (same as RTN)
+        Vector3D rHat = screenPos.normalize();
+        Vector3D hVec = screenPos.crossProduct(screenVel);
         Vector3D cHat = hVec.normalize();
-
         Vector3D iHat = cHat.crossProduct(rHat);
 
         // project relative position onto RIC (RTN)
