@@ -21,6 +21,27 @@ public class SPVecReader {
     private int satNo;
     private TimeStampedPVCoordinates tspvTEME;
 
+    public void readSPVec(String path, int satNo){
+
+        // read the SP vector that the conjunction was derived from
+        String satNoString;
+        if(Integer.toString(satNo).length()==1){
+            satNoString = "0000"+Integer.toString(satNo);
+        }else if(Integer.toString(satNo).length()==2){
+            satNoString = "000"+Integer.toString(satNo);
+        }else if(Integer.toString(satNo).length()==3){
+            satNoString = "00"+Integer.toString(satNo);
+        }else if(Integer.toString(satNo).length()==4){
+            satNoString = "0"+Integer.toString(satNo);
+        }else{
+            satNoString = Integer.toString(satNo);
+        }
+        //pull the sp vector
+        String filePath = path + "/" + satNoString.substring(0,2) + "/" + satNoString + ".txt";
+
+        readSPVec(new File(filePath));
+    }
+
     public void readSPVec(File fName){
 
         try{

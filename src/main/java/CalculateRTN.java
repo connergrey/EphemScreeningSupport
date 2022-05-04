@@ -8,53 +8,21 @@ public class CalculateRTN {
 
     public static void main(String[] arg){
 
+        // load orekit data
+        DataLoader dataLoader = new DataLoader();
+        dataLoader.loadData();
+
         // the satNo that the ephemeris screening is being done for
         int screenSatNo = 47479;
 
-        File file = new File("kratos_pc.csv");
-
-        String[] parts = new String[0];
-        try {
-            Scanner scan = new Scanner(file);
-            String header = scan.nextLine();//header
-            header = header.replaceAll("\\s", ""); // remove spaces
-            //System.out.println(header);
-
-            String line = scan.nextLine();
-            line = line.replaceAll("\\s", ""); // remove spaces
-            parts = line.split(",");
-
-            scan.close();
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }
-
-        Vector3D priPos = new Vector3D( Double.parseDouble(parts[10]) , Double.parseDouble(parts[11]), Double.parseDouble(parts[12]) ); //meters
-        Vector3D secPos = new Vector3D( Double.parseDouble(parts[13]) , Double.parseDouble(parts[14]), Double.parseDouble(parts[15]) ); //meters
-
-        Vector3D priVel = new Vector3D( Double.parseDouble(parts[16]) , Double.parseDouble(parts[17]), Double.parseDouble(parts[18]) ); // m/s
-        Vector3D secVel = new Vector3D( Double.parseDouble(parts[19]) , Double.parseDouble(parts[20]), Double.parseDouble(parts[21]) ); // m/s
+        KratosPCReader kratosPCReader = new KratosPCReader("kratos_pc.csv");
+        kratosPCReader.screenSat(screenSatNo);
 
         // define frame according to the sat we are screening
-        int priSatNo = Integer.parseInt(parts[0]);
-        int secSatNo = Integer.parseInt(parts[1]);
-
-        Vector3D screenPos = new Vector3D(0,0,0);
-        Vector3D screenVel = new Vector3D(0,0,0);
-        Vector3D otherPos = new Vector3D(0,0,0);
-        Vector3D otherVel = new Vector3D(0,0,0);
-        // determine if sat we are screening is primary or secondary
-        if(priSatNo == screenSatNo) {
-            screenPos = priPos;
-            screenVel = priVel;
-            otherPos = secPos;
-            otherVel = secVel;
-        }else if(secSatNo == screenSatNo){
-            screenPos = secPos;
-            screenVel = secVel;
-            otherPos = priPos;
-            otherVel = priVel;
-        }
+        Vector3D screenPos = kratosPCReader.getScreenPos();
+        Vector3D screenVel = kratosPCReader.getScreenVel();
+        Vector3D otherPos = kratosPCReader.getOtherPos();
+        Vector3D otherVel = kratosPCReader.getOtherVel();
 
         // find relative vector from screen sat to the other sat
         Vector3D rRel = otherPos.subtract(screenPos);
