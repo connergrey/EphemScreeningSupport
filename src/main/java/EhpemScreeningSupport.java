@@ -8,10 +8,12 @@ public class EhpemScreeningSupport {
         DataLoader dataLoader = new DataLoader();
         dataLoader.loadData();
 
-        int screenSatNo = 42013;
+        //int screenSatNo = 42013;
+        int screenSatNo = 45100;
 
         //you need to specify the file path
-        String path = "SP_VEC";
+        //String path = "SP_VEC";
+        String path = "/Users/connergrey/Documents/SP VECTORS/vectors_22125/scratch/SP_VEC";
         OrbitBucketer bucketer = new OrbitBucketer(path);
         VCMGenerator generator = new VCMGenerator(path);
 
@@ -26,7 +28,7 @@ public class EhpemScreeningSupport {
             generator.generateVCM();
 
             //the method is commented out for now.
-            generator.findDroppedVCMs(7.0);
+            //generator.findDroppedVCMs(7.0);
 
 
         }catch (FileNotFoundException e){
