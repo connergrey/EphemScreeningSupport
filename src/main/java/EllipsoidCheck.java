@@ -39,7 +39,8 @@ public class EllipsoidCheck {
         double nMD = rRel.dotProduct(cHat);
 
         //check if the point is within the ellipse
-        double ellipseEq = (rMD/R)*(rMD/R) + (tMD/T)*(tMD/T) + (nMD/N)*(nMD/N);
+        double ellipseEq = (rMD/R)*(rMD/R) + (tMD/T)*(tMD/T) + (nMD/N)*(nMD/N); // if this is less than 1, then the
+        // point is within the ellipse
         boolean isConjunctionInEllipsoid = ellipseEq < 1;
 
 
