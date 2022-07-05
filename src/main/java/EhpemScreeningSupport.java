@@ -9,11 +9,13 @@ public class EhpemScreeningSupport {
         dataLoader.loadData();
 
         //int screenSatNo = 42013;
-        int screenSatNo = 45100;
+        //int screenSatNo = 45100;
+        //passing in zero returns ALL sats vcms
+        int screenSatNo = 0;
 
         //you need to specify the file path
         //String path = "SP_VEC";
-        String path = "/Users/connergrey/Documents/SP VECTORS/vectors_22125/scratch/SP_VEC";
+        String path = "/Users/connergrey/Documents/SP VECTORS/vectors_22153/scratch/SP_VEC";
         OrbitBucketer bucketer = new OrbitBucketer(path);
         VCMGenerator generator = new VCMGenerator(path);
 

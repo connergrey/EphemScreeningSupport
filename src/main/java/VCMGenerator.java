@@ -37,7 +37,7 @@ public class VCMGenerator {
         TimeZone timeZone = TimeZone.getTimeZone("UTC");
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Calendar cal  = Calendar.getInstance(timeZone);
-        SimpleDateFormat creationDate = new SimpleDateFormat("yyyy DDD (dd MMM) hh:mm:ss.SSS", Locale.US);
+        SimpleDateFormat creationDate = new SimpleDateFormat("yyyy DDD (dd MMM) HH:mm:ss.SSS", Locale.US);
 
         //write to vcm file
         PrintWriter vcm = new PrintWriter("output.vcm");
@@ -101,7 +101,7 @@ public class VCMGenerator {
             Calendar calendar = Calendar.getInstance(timeZone);
             calendar.set(Calendar.YEAR, year);
             calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
-            calendar.set(Calendar.HOUR, hour);
+            calendar.set(Calendar.HOUR_OF_DAY, hour);
             calendar.set(Calendar.MINUTE, min);
             calendar.set(Calendar.SECOND, (int) sec);
             double num = (sec - (int) sec)*1000;

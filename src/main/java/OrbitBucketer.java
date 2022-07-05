@@ -14,6 +14,8 @@ public class OrbitBucketer {
 
     private String path;
     private final Frame eme2000 = FramesFactory.getEME2000();
+    private int N;
+    public Integer[] exclusionList = {49328};
 
 
     public OrbitBucketer(String path){
@@ -25,7 +27,7 @@ public class OrbitBucketer {
 
         PrintWriter output = new PrintWriter(new File("output.csv"));
         // need N (length(alt) + 1) groups
-        int N = altitudes.length + 1;
+        N = altitudes.length + 1;
 
         List<PrintWriter> groups = new ArrayList<>();
         for(int i = 0; i < N; i++){
@@ -44,6 +46,15 @@ public class OrbitBucketer {
             }
 
             for (File file : filePath.listFiles()) {
+
+                boolean isIn = false;
+                for (int check:exclusionList) {
+                    if (check == Integer.parseInt(file.getName().split(".txt")[0])){
+                        isIn = true;
+                        break;
+                    }
+                }
+                if(isIn){continue;}
 
                 SPVecReader spReader = new SPVecReader();
                 spReader.readSPVec(file);
@@ -171,6 +182,11 @@ public class OrbitBucketer {
         while (readOut.hasNextLine()) {
             String[] parts = readOut.nextLine().split(",");
             int outputSatNo = Integer.parseInt(parts[0]);
+
+            if (screenSatNo == 0){
+                outputBeg = 0;
+                outputEnd = N-1;
+            }
 
             if (screenSatNo == outputSatNo) {
                 outputBeg = Integer.parseInt(parts[3]);
